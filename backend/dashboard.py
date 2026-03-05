@@ -4,7 +4,8 @@ import sqlite3
 import requests
 import os
 from datetime import date
-
+import init_db
+init_db.init_database()
 app = FastAPI()
 
 DB_PATH = "history.db"
