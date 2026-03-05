@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>AI 量化投注平台</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {background:#0f172a;color:#fff;font-family:sans-serif;padding:20px}
+.card {background:#1e293b;padding:20px;border-radius:12px;margin-bottom:20px}
+h1 {text-align:center}
+button {padding:8px 15px;border:none;border-radius:6px;background:#10b981;color:#fff}
+input {padding:6px;border-radius:6px;border:none}
+.highlight {color:#facc15;font-weight:bold}
+.fire {color:#ff4d4f}
+</style>
+</head>
+<body>
+
+<h1>📊 AI 量化交易儀表板</h1>
+
+<div class="card">
+最低收益率門檻：
+<input type="number" id="min_ev" value="0" step="0.1">
+<button onclick="loadBoard()">刷新</button>
+</div>
+
+<div id="top5"></div>
+
+<div class="card">
+<h2>📈 EV 熱度分佈</h2>
+<canvas id="heatChart"></canvas>
+</div>
+
+<script>
+
+async function loadBoard(){
+
+const min_ev = document.getElementById("min_ev").value;
+
+const res = await fetch(`/ev/nba/all?min_ev=${min_ev}`);
+const data = await res.json();
+
+const top = await fetch(`/ev/nba/top`);
+const topData = await top.json();
+
+let html = "<div class='card'><h2>🏆 今日最高價值排行</h2>";
+
+topData.forEach(item=>{
+html += `
+<p>
+<b>${item["比賽"]}</b><br>
+推薦方向：${item["推薦方向"]}<br>
+最佳賠率：${item["最佳賠率"]}<br>
+真實勝率：${item["真實勝率%"]}%<br>
+<span class="highlight">預期收益率：${item["預期收益率%"]}%</span>
+<span class="fire">${item["高收益標記"]}</span><br>
+建議投注比例：${item["建議投注比例%"]}%
+</p><hr>
+`;
+});
+
+html += "</div>";
+document.getElementById("top5").innerHTML = html;
+
+loadHeat();
+
+}
+
+async function loadHeat(){
+
+const res = await fetch("/ev/nba/heat");
+const data = await res.json();
+
+const labels = data.map(d=>d["比賽"]);
+const values = data.map(d=>d["收益率"]);
+
+new Chart(document.getElementById("heatChart"),{
+type:"bar",
+data:{
+labels:labels,
+datasets:[{
+label:"預期收益率%",
+data:values
+}]
+}
+});
+}
+
+loadBoard();
+
+</script>
+
+</body>
+</html>

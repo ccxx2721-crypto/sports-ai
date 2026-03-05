@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sports Analytics MVP</title>
+  <style>
+    body { margin:0; font-family: system-ui, "Noto Sans TC", Arial; background:#0b0d10; color:#e8eef6; }
+    .container { max-width: 860px; margin: 0 auto; padding: 16px; }
+    .card { background:#12161c; border:1px solid #1f2630; border-radius:16px; padding:14px; }
+    label { display:block; color:#9fb0c4; font-size:12px; margin: 10px 0 6px; }
+    input, button {
+      width:100%; box-sizing:border-box;
+      border-radius:12px; border:1px solid #1f2630;
+      background:#0f1318; color:#e8eef6;
+      padding:12px; font-size:16px; min-height:44px;
+    }
+    button { background:#1a2230; font-weight:700; cursor:pointer; margin-top:12px; }
+    .muted { color:#9fb0c4; margin-top:10px; }
+    .big { font-size: 28px; font-weight: 800; }
+    .row { display:flex; gap:12px; margin-top:12px; }
+    .row > div { flex:1; }
+    pre { margin: 8px 0 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Sports Analytics MVP（前端）</h2>
+
+    <div class="card">
+      <label>盤型</label>
+<select id="market">
+  <option value="spread">讓分（Spread）</option>
+  <option value="total">大小球（Total）</option>
+</select>
+
+      <label>主隊讓分（Spread，例：-3.5 主讓 / +2.5 主受讓）</label>
+      <input id="spread" type="number" step="0.5" placeholder="-3.5">
+
+      <button id="btn">計算勝率</button>
+
+      <div class="muted" id="status">等待輸入…</div>
+
+      <div class="row">
+        <div>
+          <div class="muted">主勝率</div>
+          <div class="big" id="pHome">-</div>
+        </div>
+        <div>
+          <div class="muted">客勝率</div>
+          <div class="big" id="pAway">-</div>
+        </div>
+      </div>
+
+      <div class="muted" style="margin-top:12px;">歷史相似盤口（勝率高的那邊）</div>
+      <div id="pick" class="big" style="font-size:20px; margin-top:6px;">-</div>
+<pre id="hist" style="white-space:pre-wrap; background:#0f1318; border:1px solid #1f2630; padding:10px; border-radius:12px;"></pre>
+      <pre id="hist" style="white-space:pre-wrap; background:#0f1318; border:1px solid #1f2630; padding:10px; border-radius:12px;"></pre>
+    </div>
+  </div>
+
+<script>
+  const API_BASE = "http://127.0.0.1:8000"; // 部署後改成 Render 後端網址
+  const $ = (id) => document.getElementById(id);
+  const pct = (x) => (x * 100).toFixed(1) + "%";
+
+  async function fetchJSON(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
+  }
+
+  $("btn").addEventListener("click", async () => {
+    const spread = parseFloat($("spread").value);
+    if (Number.isNaN(spread)) {
+      $("status").textContent = "請輸入 spread（例如 -3.5）";
+      return;
+    }
+
+    $("status").textContent = "計算中…";
+    $("hist").textContent = "";
+
+    try {
+      const data = await fetchJSON(`${API_BASE}/predict?spread=${encodeURIComponent(spread)}`);
+      $("pHome").textContent = pct(data.home_win_prob);
+      $("pAway").textContent = pct(data.away_win_prob);
+
+      const histRes = await fetch(`${API_BASE}/history/spread`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sport: "nba", spread_home: spread, band: 1.0 })
+      });
+
+      if (!histRes.ok) throw new Error(await histRes.text());
+      const hist = await histRes.json();
+      const h = hist.home_cover_rate;
+const a = hist.away_cover_rate;
+
+if (hist.decided_size === 0) {
+  $("pick").textContent = "資料不足：請增加歷史盤口資料";
+} else if (h > a) {
+  $("pick").textContent = `推薦：主隊過盤（${(h*100).toFixed(1)}%）`;
+} else if (a > h) {
+  $("pick").textContent = `推薦：客隊受讓（${(a*100).toFixed(1)}%）`;
+} else {
+  $("pick").textContent = `兩邊相近（主 ${ (h*100).toFixed(1)}% / 客 ${ (a*100).toFixed(1)}%）`;
+}
+      $("hist").textContent = JSON.stringify(hist, null, 2);
+
+      $("status").textContent = "完成";
+    } catch (e) {
+      $("status").textContent = "錯誤：" + e.message;
+    }
+  });
+</script>
+</body>
+</html>

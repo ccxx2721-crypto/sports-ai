@@ -1,0 +1,20 @@
+TEAM_ZH = {
+    "Dallas Mavericks": "達拉斯獨行俠",
+    "Orlando Magic": "奧蘭多魔術",
+    "Sacramento Kings": "沙加緬度國王",
+    "New Orleans Pelicans": "紐奧良鵜鶘",
+    "San Antonio Spurs": "聖安東尼奧馬刺",
+    "Detroit Pistons": "底特律活塞",
+    "Toronto Raptors": "多倫多暴龍",
+    "Minnesota Timberwolves": "明尼蘇達灰狼",
+    "Chicago Bulls": "芝加哥公牛",
+    "Phoenix Suns": "鳳凰城太陽",
+    "Los Angeles Lakers": "洛杉磯湖人",
+    "Denver Nuggets": "丹佛金塊",
+    "Brooklyn Nets": "布魯克林籃網",
+    "Miami Heat": "邁阿密熱火",
+    "Utah Jazz": "猶他爵士",
+    "Washington Wizards": "華盛頓巫師",
+    "Golden State Warriors": "金州勇士",
+    "Houston Rockets": "休士頓火箭"
+}
